@@ -35,7 +35,7 @@ TARGET_ARCH_VARIANT := armv5te
 endif
 
 ifeq ($(strip $(TARGET_GCC_VERSION_EXP)),)
-TARGET_GCC_VERSION := 4.7
+TARGET_GCC_VERSION := 4.8
 else
 TARGET_GCC_VERSION := $(TARGET_GCC_VERSION_EXP)
 endif
@@ -68,30 +68,19 @@ endif
 
 TARGET_NO_UNDEFINED_LDFLAGS := -Wl,--no-undefined
 
-TARGET_arm_CFLAGS :=    -O2 \
-                        -fomit-frame-pointer \
-                        -fstrict-aliasing    \
-                        -funswitch-loops
+##################
+### ARCHIDROID ###
 
-# Modules can choose to compile some source as thumb.
-TARGET_thumb_CFLAGS :=  -mthumb \
-                        -Os \
-                        -fomit-frame-pointer \
-                        -fno-strict-aliasing
+# NOTICE
+# These flags are highly experimental and I HIGHLY SUGGEST to STAY AWAY from them unless you REALLY know what you're doing!
+# Please check core/combo/select.mk for the full notice
 
-# Set FORCE_ARM_DEBUGGING to "true" in your buildspec.mk
-# or in your environment to force a full arm build, even for
-# files that are normally built as thumb; this can make
-# gdb debugging easier.  Don't forget to do a clean build.
-#
-# NOTE: if you try to build a -O0 build with thumb, several
-# of the libraries (libpv, libwebcore, libkjs) need to be built
-# with -mlong-calls.  When built at -O0, those libraries are
-# too big for a thumb "BL <label>" to go from one end to the other.
-ifeq ($(FORCE_ARM_DEBUGGING),true)
-  TARGET_arm_CFLAGS += -fno-omit-frame-pointer -fno-strict-aliasing
-  TARGET_thumb_CFLAGS += -marm -fno-omit-frame-pointer
-endif
+TARGET_arm_CFLAGS := -O2 -DNDEBUG -ffunction-sections -fdata-sections -funswitch-loops -frename-registers -frerun-cse-after-loop -fomit-frame-pointer -fgcse-after-reload -fgcse-sm -fgcse-las -fweb -ftracer -fstrict-aliasing -Wstrict-aliasing=3 -Wno-error=strict-aliasing -Wno-error=unused-parameter -Wno-error=unused-but-set-variable -Wno-error=maybe-uninitialized
+TARGET_thumb_CFLAGS := -mthumb -O2 -DNDEBUG -ffunction-sections -fdata-sections -funswitch-loops -frename-registers -frerun-cse-after-loop -fomit-frame-pointer -fgcse-after-reload -fgcse-sm -fgcse-las -fweb -ftracer -fstrict-aliasing -Wstrict-aliasing=3 -Wno-error=strict-aliasing -Wno-error=unused-parameter -Wno-error=unused-but-set-variable -Wno-error=maybe-uninitialized
+TARGET_RELEASE_CFLAGS := -O2 -DNDEBUG -ffunction-sections -fdata-sections -funswitch-loops -frename-registers -frerun-cse-after-loop -fomit-frame-pointer -fgcse-after-reload -fgcse-sm -fgcse-las -fweb -ftracer -fstrict-aliasing -Wstrict-aliasing=3 -Wno-error=strict-aliasing -Wno-error=unused-parameter -Wno-error=unused-but-set-variable -Wno-error=maybe-uninitialized
+
+### ARCHIDROID ###
+##################
 
 android_config_h := $(call select-android-config-h,linux-arm)
 
@@ -108,15 +97,6 @@ TARGET_GLOBAL_CFLAGS += \
 			$(arch_variant_cflags) \
 			-include $(android_config_h) \
 			-I $(dir $(android_config_h))
-
-# This warning causes dalvik not to build with gcc 4.6+ and -Werror.
-# We cannot turn it off blindly since the option is not available
-# in gcc-4.4.x.  We also want to disable sincos optimization globally
-# by turning off the builtin sin function.
-ifneq ($(filter 4.6 4.6.% 4.7 4.7.%, $(TARGET_GCC_VERSION)),)
-TARGET_GLOBAL_CFLAGS += -Wno-unused-but-set-variable -fno-builtin-sin \
-			-fno-strict-volatile-bitfields
-endif
 
 # This is to avoid the dreaded warning compiler message:
 #   note: the mangling of 'va_list' has changed in GCC 4.4
@@ -140,15 +120,6 @@ TARGET_GLOBAL_LDFLAGS += \
 TARGET_GLOBAL_CFLAGS += -mthumb-interwork
 
 TARGET_GLOBAL_CPPFLAGS += -fvisibility-inlines-hidden
-
-# More flags/options can be added here
-TARGET_RELEASE_CFLAGS := \
-			-DNDEBUG \
-			-g \
-			-Wstrict-aliasing=2 \
-			-fgcse-after-reload \
-			-frerun-cse-after-loop \
-			-frename-registers
 
 libc_root := bionic/libc
 libm_root := bionic/libm
