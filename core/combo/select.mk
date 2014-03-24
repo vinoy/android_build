@@ -46,9 +46,42 @@ $(combo_target)HAVE_STRLCPY := 0
 $(combo_target)HAVE_STRLCAT := 0
 $(combo_target)HAVE_KERNEL_MODULES := 0
 
-$(combo_target)GLOBAL_CFLAGS := -fno-exceptions -Wno-multichar
-$(combo_target)RELEASE_CFLAGS := -O2 -g -fno-strict-aliasing
-$(combo_target)GLOBAL_LDFLAGS :=
+##################
+### ARCHIDROID ###
+
+# NOTICE
+# These flags are highly experimental and I HIGHLY SUGGEST to STAY AWAY from them unless you REALLY know what you're doing!
+#
+# BROKEN FLAGS: -s -fipa-pta -fmodulo-sched -fmodulo-sched-allow-regmoves -ftree-parallelize-loops=n -flto=n
+#
+# -fipa-pta -> Compiles without problems but causes weird audio problems. From fast overview it looks like 48 KHz sounds are played 2-3 times faster.
+# This is observed for example with default "Pixie Dust" notification sound
+#
+# -fgraphite -fgraphite-identity -floop-block -floop-flatten -floop-interchange -floop-strip-mine -floop-parallelize-all -ftree-loop-linear -> sorry, unimplemented: Graphite loop optimizations cannot be used
+#
+# -fmodulo-sched -fmodulo-sched-allow-regmoves -> Causes segmentation faults in:
+# external/tremolo/Tremolo/res012.c: In function 'res_inverse': external/tremolo/Tremolo/res012.c:243:1: internal compiler error: Segmentation fault
+#
+# -ftree-parallelize-loops=n -> Causes segmentation faults in:
+# system/core/include/utils/Vector.h: In member function 'void android::Vector<TYPE>::do_construct(...)': system/core/include/utils/Vector.h:389:6: internal compiler error: Segmentation fault
+#
+# -s (strip) -> Causes various dependency errors
+# /tmp/ccpaTRR5.ltrans5.ltrans.o: In function `uprv_floor_51':
+# ccpaTRR5.ltrans5.o:(.text+0x4cc0): undefined reference to `floor'
+# collect2: ld returned 1 exit status
+#
+# -flto -> Causes internal compiler error
+# lto1: internal compiler error: in lto_varpool_replace_node, at lto-symtab.c:304
+# lto-wrapper: prebuilts/tools/gcc-sdk/../../gcc/linux-x86/host/i686-linux-glibc2.7-4.6/bin/i686-linux-g++ returned 1 exit status
+# make: *** [/root/android/omni/out/host/linux-x86/obj/lib/libcrypto-host.so] Error 1
+
+$(combo_target)GLOBAL_CFLAGS := -O2 -DNDEBUG -ffunction-sections -fdata-sections -funswitch-loops -frename-registers -frerun-cse-after-loop -fomit-frame-pointer -fgcse-after-reload -fgcse-sm -fgcse-las -fweb -ftracer -fstrict-aliasing -Wstrict-aliasing=3 -Wno-error=strict-aliasing -Wno-error=unused-parameter -Wno-error=unused-but-set-variable -Wno-error=maybe-uninitialized -fno-exceptions -Wno-multichar
+$(combo_target)RELEASE_CFLAGS := -O2 -DNDEBUG -ffunction-sections -fdata-sections -funswitch-loops -frename-registers -frerun-cse-after-loop -fomit-frame-pointer -fgcse-after-reload -fgcse-sm -fgcse-las -fweb -ftracer -fstrict-aliasing -Wstrict-aliasing=3 -Wno-error=strict-aliasing -Wno-error=unused-parameter -Wno-error=unused-but-set-variable -Wno-error=maybe-uninitialized
+$(combo_target)GLOBAL_LDFLAGS := -Wl,-O1 -Wl,--as-needed -Wl,--relax -Wl,--sort-common -Wl,--gc-sections
+
+### ARCHIDROID ###
+##################
+
 $(combo_target)GLOBAL_ARFLAGS := crsP
 
 $(combo_target)EXECUTABLE_SUFFIX :=
